@@ -18,7 +18,7 @@ interface LoginDataProps {
   id: string;
   service_name: string;
   email: string;
-  password: string;
+  password: string
 };
 
 type LoginListDataProps = LoginDataProps[];
@@ -30,15 +30,36 @@ export function Home() {
 
   async function loadData() {
     const dataKey = '@savepass:logins';
-    // Get asyncStorage data, use setSearchListData and setData
+    const response = await AsyncStorage.getItem(dataKey);
+
+    if(response){
+      const responseParse = JSON.parse(response);
+
+      setData(responseParse);
+      setSearchListData(responseParse);
+    }
   }
 
   function handleFilterLoginData() {
-    // Filter results inside data, save with setSearchListData
+    const filterData = data.filter(item => {
+      const filterValue = item.service_name
+        .toLowerCase().trim()
+        .includes(searchText.toLowerCase().trim());      
+
+      if(filterValue) {
+        return item;
+      }
+    });
+
+    setSearchListData(filterData);
   }
 
   function handleChangeInputText(text: string) {
-    // Update searchText value
+    if(!text) {
+      setSearchListData(data)
+    }
+
+    setSearchText(text);
   }
 
   useFocusEffect(useCallback(() => {
