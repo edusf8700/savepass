@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useForm } from 'react-hook-form';
+import { Control, FieldValues, useForm } from 'react-hook-form';
 import { RFValue } from 'react-native-responsive-fontsize';
 import * as Yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -38,16 +38,19 @@ type RootStackParamList = {
 type NavigationProps = StackNavigationProp<RootStackParamList, 'RegisterLoginData'>;
 
 export function RegisterLoginData() {
-  const { navigate } = useNavigation<NavigationProps>()
+  const { navigate } = useNavigation<NavigationProps>();
+
   const {
     control,
     handleSubmit,
     formState: {
       errors
     }
-  } = useForm({
+  } = useForm<FormData>({
     resolver: yupResolver(schema)
   });
+
+  const formControll = control as unknown as Control<FieldValues, any>
 
   async function handleRegister(formData: FormData) {
     const newLoginData = {
@@ -56,11 +59,17 @@ export function RegisterLoginData() {
     }
 
     const dataKey = '@savepass:logins';
-    const response = await AsyncStorage.getItem(dataKey) || '';
 
-    const parseData = JSON.parse(response) || []; 
+    //await AsyncStorage.removeItem(dataKey);
 
-    await AsyncStorage.setItem(dataKey, JSON.stringify([...parseData, newLoginData]));
+    const response = await AsyncStorage.getItem(dataKey);
+    
+    if(response) { 
+      const parseData = JSON.parse(response);
+      await AsyncStorage.setItem(dataKey, JSON.stringify([...parseData, newLoginData]));
+    } else {
+      await AsyncStorage.setItem(dataKey, JSON.stringify([newLoginData]));
+    }
 
     navigate('Home');
   }
@@ -79,9 +88,9 @@ export function RegisterLoginData() {
             title="Nome do serviço"
             name="service_name"
             error={
-              errors.service_name && errors.service_name.message
+              errors.service_name && errors?.service_name.message
             }
-            control={control}
+            control={formControll}
             autoCapitalize="sentences"
             autoCorrect
           />
@@ -90,9 +99,9 @@ export function RegisterLoginData() {
             title="E-mail ou usuário"
             name="email"
             error={
-              errors.email && errors.email.message
+              errors.email && errors?.email.message
             }
-            control={control}
+            control={formControll}
             autoCorrect={false}
             autoCapitalize="none"
             keyboardType="email-address"
@@ -102,9 +111,9 @@ export function RegisterLoginData() {
             title="Senha"
             name="password"
             error={
-              errors.password && errors.password.message
+              errors.password && errors?.password.message
             }
-            control={control}
+            control={formControll}
             secureTextEntry
           />
 
